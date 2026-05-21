@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Métricas - Supervisores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #333;
+        }
+
+        .header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .header-content p {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .toggle-btn, .action-btn, .add-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .toggle-btn {
+            background-color: #1e88e5;
+            color: #fff;
+        }
+
+        .toggle-btn:hover {
+            background-color: #1565c0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e88e5;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .admin-panel {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 2px solid #ff9800;
+        }
+
+        .admin-panel h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #ffb74d;
+        }
+
+        .admin-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .admin-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            font-size: 14px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        .input-group input::placeholder {
+            color: #777;
+        }
+
+        .add-btn {
+            padding: 8px 16px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 4px;
+            font-size: 14px;
+            border: 1px solid #333;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .item-vencimiento {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .delete-btn {
+            padding: 4px 8px;
+            background-color: #ff6b6b;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff5252;
+        }
+
+        .table-wrapper {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: #1e3a5f;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: center;
+            color: #fff;
+            font-weight: 600;
+            border-right: 1px solid #333;
+            min-width: 120px;
+        }
+
+        td {
+            padding: 12px 8px;
+            text-align: center;
+            border-right: 1px solid #333;
+            min-width: 120px;
+            color: #e0e0e0;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #333;
+        }
+
+        .supervisor-cell {
+            padding: 12px 12px;
+            font-weight: 600;
+            background-color: #252525;
+            min-width: 160px;
+            text-align: left;
+            color: #ffffff;
+        }
+
+        .data-cell {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .data-cell:hover {
+            opacity: 0.8;
+        }
+
+        .data-cell.checked {
+            background-color: #1b5e20 !important;
+        }
+
+        .data-cell.unchecked {
+            background-color: #2a2a2a;
+        }
+
+        .data-cell input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .cumplimiento-cell {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .cumplimiento-100 {
+            background-color: #2e7d32 !important;
+            color: #fff;
+        }
+
+        .cumplimiento-80 {
+            background-color: #f57f17 !important;
+            color: #fff;
+        }
+
+        .cumplimiento-low {
+            background-color: #c62828 !important;
+            color: #fff;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            background-color: #1e88e5;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background-color: #1565c0;
+        }
+
+        .action-btn.reset {
+            background-color: #d32f2f;
+        }
+
+        .action-btn.reset:hover {
+            background-color: #b71c1c;
+        }
+
+        .historico-section {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        .historico-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .historico-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .historico-card {
+            background-color: #2a2a2a;
+            border-radius: 6px;
+            padding: 12px;
+            border: 1px solid #333;
+        }
+
+        .historico-header {
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #1e88e5;
+        }
+
+        .historico-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .historico-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+            color: #e0e0e0;
+        }
+
+        .historico-item span:last-child {
+            font-weight: 600;
+        }
+
+        .historico-item .cumplido {
+            color: #66bb6a;
+        }
+
+        .historico-item .no-cumplido {
+            color: #ef5350;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alertas-panel {
+            background-color: #2a1a1a;
+            border-left: 4px solid #ff6b6b;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 6px;
+            border: 1px solid #444;
+        }
+
+        .alertas-panel.warning {
+            border-left-color: #ffb74d;
+            background-color: #2a2416;
+        }
+
+        .alertas-titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alertas-panel.warning .alertas-titulo {
+            color: #ffb74d;
+        }
+
+        .alertas-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .alerta-item {
+            background-color: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            border-left: 3px solid #ff6b6b;
+        }
+
+        .alertas-panel.warning .alerta-item {
+            border-left-color: #ffb74d;
+        }
+
+        .alerta-supervisor {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .alerta-falta {
+            color: #ffb3b3;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .alertas-panel.warning .alerta-falta {
+            color: #ffe0b3;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group input {
+                min-width: 100%;
+            }
+
+            .table-wrapper {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px 4px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-content">
+                <h1>📊 Control de Métricas</h1>
+                <p>Tracking de entregas de supervisores</p>
+            </div>
+            <button class="toggle-btn" id="toggleAdmin">⚙️ Administración</button>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="supervisoresCompletos">0/0</div>
+                <div class="stat-label">Supervisores al 100%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="cumplimientoPromedio">0%</div>
+                <div class="stat-label">Cumplimiento Promedio</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tareasActivas">0</div>
+                <div class="stat-label">Tareas Activas</div>
+            </div>
+        </div>
+
+        <!-- ALERTAS POR DÍA -->
+        <div id="alertasPanel" class="alertas-panel hidden">
+            <div class="alertas-titulo">⚠️ Tareas Pendientes Hoy</div>
+            <div class="alertas-lista" id="alertasLista"></div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div class="admin-panel hidden" id="adminPanel">
+            <h2>⚙️ Administración</h2>
+
+            <!-- Agregar Supervisor -->
+            <div class="admin-section">
+                <h3 class="section-title">Agregar Supervisor</h3>
+                <div class="input-group">
+                    <input type="text" id="nuevoSupervisor" placeholder="Nombre del supervisor">
+                    <button class="add-btn" id="agregarSupervisorBtn">✓ Agregar</button>
+                </div>
+                <div class="item-list" id="supervisoresList"></div>
+            </div>
+
+            <!-- Agregar Tarea -->
+            <div class="admin-section">
+                <h3 class="section-title">Agregar Tarea</h3>
+                <div class="input-group">
+                    <input type="text" id="nuevaTarea" placeholder="Nombre de la tarea">
+                    <input type="text" id="nuevoVencimiento" placeholder="Vencimiento (ej: Lunes, Día 15)">
+                    <button class="add-btn" id="agregarTareaBtn">✓ Agregar</button>
+                </div>
+                <div class="item-list" id="tareasList"></div>
+            </div>
+
+            <!-- Limpiar Histórico -->
+            <div class="admin-section">
+                <h3 class="section-title">Limpiar Histórico</h3>
+                <button class="delete-btn" id="limpiarHistoricoBtn" style="width: 100%; padding: 10px; background-color: #ff6b6b; color: white; font-weight: 600; cursor: pointer; border-radius: 4px;">🗑️ Borrar Todo el Histórico</button>
+            </div>
+        </div>
+
+        <!-- TABLA PRINCIPAL -->
+        <div class="table-wrapper">
+            <table id="metricsTable">
+                <thead>
+                    <tr>
+                        <th>Supervisor</th>
+                        <th id="tareaHeaders"></th>
+                        <th>Cumplimiento</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="actions-bar">
+            <button class="action-btn" id="exportarBtn">📊 Exportar Excel</button>
+            <button class="action-btn" id="exportarCSVBtn">📋 Exportar para Importar</button>
+            <button class="action-btn" id="importarBtn">📥 Importar Datos</button>
+            <input type="file" id="archivoImportar" accept=".csv,.xls" style="display: none;">
+            <button class="action-btn reset" id="resetBtn">🔄 Resetear Mes</button>
+        </div>
+
+        <!-- HISTÓRICO -->
+        <div class="historico-section hidden" id="historicoSection">
+            <h2>📈 Histórico</h2>
+            <div class="historico-grid" id="historicoGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Estado
+        let supervisores = JSON.parse(localStorage.getItem('supervisores')) || ['Juan Rodríguez', 'María López', 'Carlos Díaz'];
+        let tareas = JSON.parse(localStorage.getItem('tareas')) || [
+            { id: 1, nombre: 'Lun - Control Horas', vencimiento: 'Lunes' },
+            { id: 2, nombre: 'Mar - Planilla', vencimiento: 'Martes' },
+            { id: 3, nombre: 'Mar - Presupuestos', vencimiento: 'Martes' },
+            { id: 4, nombre: 'Mié - Reporte Cliente', vencimiento: 'Miércoles' },
+            { id: 5, nombre: 'Día 15 - Encuestas', vencimiento: '15' },
+            { id: 6, nombre: 'Día 24 - Logros/Desafíos', vencimiento: '24' },
+            { id: 7, nombre: 'Día 30 - Scorecard', vencimiento: '30' },
+        ];
+        let entregas = JSON.parse(localStorage.getItem('entregas')) || {};
+        let historico = JSON.parse(localStorage.getItem('historico')) || [];
+
+        // Guardar en localStorage
+        function guardar() {
+            localStorage.setItem('supervisores', JSON.stringify(supervisores));
+            localStorage.setItem('tareas', JSON.stringify(tareas));
+            localStorage.setItem('entregas', JSON.stringify(entregas));
+            localStorage.setItem('historico', JSON.stringify(historico));
+        }
+
+        // Toggle entrega
+        function toggleEntrega(supervisor, tareaId) {
+            const key = `${supervisor}-${tareaId}`;
+            entregas[key] = !entregas[key];
+            guardar();
+            render();
+        }
+
+        // Agregar supervisor
+        document.getElementById('agregarSupervisorBtn').addEventListener('click', () => {
+            const nombre = document.getElementById('nuevoSupervisor').value.trim();
+            if (nombre) {
+                supervisores.push(nombre);
+                document.getElementById('nuevoSupervisor').value = '';
+                guardar();
+                render();
+            }
+        });
+
+        // Agregar tarea
+        document.getElementById('agregarTareaBtn').addEventListener('click', () => {
+            const nombre = document.getElementById('nuevaTarea').value.trim();
+            const vencimiento = document.getElementById('nuevoVencimiento').value.trim();
+            if (nombre && vencimiento) {
+                const newId = Math.max(...tareas.map(t => t.id), 0) + 1;
+                tareas.push({ id: newId, nombre, vencimiento });
+                document.getElementById('nuevaTarea').value = '';
+                document.getElementById('nuevoVencimiento').value = '';
+                guardar();
+                render();
+            }
+        });
+
+        // Limpiar histórico
+        document.getElementById('limpiarHistoricoBtn').addEventListener('click', () => {
+            if (confirm('¿Borrar TODO el histórico? Esta acción no se puede deshacer.')) {
+                historico = [];
+                guardar();
+                render();
+                alert('✅ Histórico borrado');
+            }
+        });
+
+        // Eliminar supervisor
+        function eliminarSupervisor(supervisor) {
+            supervisores = supervisores.filter(s => s !== supervisor);
+            Object.keys(entregas).forEach(key => {
+                if (key.startsWith(`${supervisor}-`)) delete entregas[key];
+            });
+            guardar();
+            render();
+        }
+
+        // Eliminar tarea
+        function eliminarTarea(tareaId) {
+            tareas = tareas.filter(t => t.id !== tareaId);
+            Object.keys(entregas).forEach(key => {
+                if (key.endsWith(`-${tareaId}`)) delete entregas[key];
+            });
+            guardar();
+            render();
+        }
+
+        // Detectar día y mostrar alertas
+        function mostrarAlertas() {
+            const hoy = new Date();
+            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const diaHoy = diasSemana[hoy.getDay()];
+            const diaDelMes = hoy.getDate();
+            
+            // Filtrar tareas para hoy
+            const tareasHoy = tareas.filter(t => {
+                const vencimiento = t.vencimiento.toLowerCase();
+                
+                // Si es por día de semana
+                if (diasSemana.map(d => d.toLowerCase()).includes(vencimiento)) {
+                    return vencimiento === diaHoy.toLowerCase();
+                }
+                
+                // Si es por día del mes (ej: "Día 15", "15")
+                const diaNumero = parseInt(vencimiento.replace(/\D/g, ''));
+                if (!isNaN(diaNumero)) {
+                    return diaNumero === diaDelMes;
+                }
+                
+                return false;
+            });
+            
+            // Si hay tareas hoy, buscar quién no las completó
+            if (tareasHoy.length > 0) {
+                const alertasPanel = document.getElementById('alertasPanel');
+                const alertasLista = document.getElementById('alertasLista');
+                alertasLista.innerHTML = '';
+                
+                let tieneAlertas = false;
+                
+                supervisores.forEach(sup => {
+                    const tareasIncompletas = tareasHoy.filter(t => !entregas[`${sup}-${t.id}`]);
+                    
+                    if (tareasIncompletas.length > 0) {
+                        tieneAlertas = true;
+                        const alerta = document.createElement('div');
+                        alerta.className = 'alerta-item';
+                        alerta.innerHTML = `
+                            <div class="alerta-supervisor">👤 ${sup}</div>
+                            <div class="alerta-falta">Falta: ${tareasIncompletas.map(t => t.nombre).join(', ')}</div>
+                        `;
+                        alertasLista.appendChild(alerta);
+                    }
+                });
+                
+                if (tieneAlertas) {
+                    alertasPanel.classList.remove('hidden');
+                } else {
+                    alertasPanel.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('alertasPanel').classList.add('hidden');
+            }
+        }
+
+        // Calcular cumplimiento
+        function calcularCumplimiento(supervisor) {
+            if (tareas.length === 0) return 0;
+            const completadas = tareas.filter(t => entregas[`${supervisor}-${t.id}`]).length;
+            return Math.round((completadas / tareas.length) * 100);
+        }
+
+        // Importar datos
+        function importarDatos() {
+            document.getElementById('archivoImportar').click();
+        }
+
+        document.getElementById('archivoImportar').addEventListener('change', (e) => {
+            const archivo = e.target.files[0];
+            if (!archivo) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    let contenido = event.target.result;
+                    // Limpiar BOM si existe
+                    if (contenido.charCodeAt(0) === 0xFEFF) {
+                        contenido = contenido.slice(1);
+                    }
+                    
+                    const lineas = contenido.split('\n').filter(l => l.trim());
+                    
+                    if (lineas.length < 2) {
+                        alert('Archivo inválido - necesita header y al menos 1 supervisor');
+                        return;
+                    }
+
+                    // Parsear header
+                    const header = lineas[0].split(',').map(h => h.trim().toLowerCase());
+                    const supervisorIdx = header.findIndex(h => h.includes('supervisor'));
+                    const cumplimientoIdx = header.length - 1;
+
+                    if (supervisorIdx === -1) {
+                        alert('No se encontró columna "Supervisor"');
+                        return;
+                    }
+
+                    // Extraer supervisores y tareas
+                    const nuevosSupervisores = new Set();
+                    const nuevasEntregas = {};
+
+                    for (let i = 1; i < lineas.length; i++) {
+                        const valores = lineas[i].split(',').map(v => v.trim());
+                        if (valores.length < 2 || !valores[supervisorIdx]) continue;
+
+                        const supervisor = valores[supervisorIdx];
+                        nuevosSupervisores.add(supervisor);
+
+                        // Parsear entregas (columnas entre supervisor y cumplimiento)
+                        for (let j = supervisorIdx + 1; j < cumplimientoIdx; j++) {
+                            const valor = valores[j];
+                            if (valor === 'Sí' || valor === '✓' || valor === 'true') {
+                                // Encontrar la tarea correspondiente
+                                const tareaHeader = header[j];
+                                const tareaEncontrada = tareas.find(t => 
+                                    t.nombre.toLowerCase().includes(tareaHeader) || 
+                                    tareaHeader.includes(t.nombre.toLowerCase())
+                                );
+                                
+                                if (tareaEncontrada) {
+                                    nuevasEntregas[`${supervisor}-${tareaEncontrada.id}`] = true;
+                                }
+                            }
+                        }
+                    }
+
+                    const numSupervisores = nuevosSupervisores.size;
+                    const numEntregas = Object.keys(nuevasEntregas).length;
+
+                    if (numSupervisores === 0) {
+                        alert('No se encontraron supervisores en el archivo');
+                        return;
+                    }
+
+                    // Confirmar importación
+                    if (confirm(`¿Importar ${numSupervisores} supervisor(es) y ${numEntregas} entrega(s)?\n\nSuperviso res: ${Array.from(nuevosSupervisores).join(', ')}`)) {
+                        supervisores = Array.from(nuevosSupervisores);
+                        entregas = nuevasEntregas;
+                        guardar();
+                        render();
+                        alert('✅ Datos importados correctamente');
+                        document.getElementById('archivoImportar').value = '';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('❌ Error al importar: ' + error.message);
+                }
+            };
+            reader.readAsText(archivo, 'UTF-8');
+        });
+
+        // Export Excel
+        function exportarExcel() {
+            // Crear tabla HTML formateada para Excel
+            let html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head>
+<meta charset="UTF-8">
+<style>
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #000; padding: 10px; text-align: center; font-family: Arial; }
+th { background-color: #1e3a5f; color: white; font-weight: bold; }
+td { background-color: #f9f9f9; }
+.supervisor { text-align: left; background-color: #e8e8e8; font-weight: bold; }
+.cumplimiento-100 { background-color: #c6efce; font-weight: bold; }
+.cumplimiento-80 { background-color: #ffeb9c; }
+.cumplimiento-low { background-color: #ffc7ce; }
+</style>
+</head>
+<body>
+<table>
+<thead>
+<tr>
+<th>Supervisor</th>`;
+            
+            tareas.forEach(t => {
+                html += `<th>${t.nombre}</th>`;
+            });
+            html += `<th>Cumplimiento %</th></tr></thead><tbody>`;
+            
+            supervisores.forEach(sup => {
+                const cumplimiento = calcularCumplimiento(sup);
+                const cumplClass = cumplimiento === 100 ? 'cumplimiento-100' : cumplimiento >= 80 ? 'cumplimiento-80' : 'cumplimiento-low';
+                
+                html += `<tr><td class="supervisor">${sup}</td>`;
+                tareas.forEach(t => {
+                    html += `<td>${entregas[`${sup}-${t.id}`] ? '✓' : ''}</td>`;
+                });
+                html += `<td class="${cumplClass}">${cumplimiento}%</td></tr>`;
+            });
+            
+            html += `</tbody></table></body></html>`;
+
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `metricas-${new Date().toISOString().split('T')[0]}.xls`;
+            link.click();
+        }
+
+        // Exportar CSV (para reimportar)
+        function exportarCSV() {
+            const datos = [];
+            const header = ['Supervisor', ...tareas.map(t => t.nombre), 'Cumplimiento %'];
+            datos.push(header);
+            
+            supervisores.forEach(sup => {
+                const fila = [sup];
+                tareas.forEach(t => {
+                    fila.push(entregas[`${sup}-${t.id}`] ? 'Sí' : '');
+                });
+                fila.push(calcularCumplimiento(sup));
+                datos.push(fila);
+            });
+            
+            let csv = '\uFEFF';
+            datos.forEach(fila => {
+                csv += fila.map(cell => {
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return '"' + cellStr.replace(/"/g, '""') + '"';
+                    }
+                    return cellStr;
+                }).join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `metricas-importar-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Resetear mes
+        function resetearMes() {
+            if (confirm('¿Confirmas que quieres resetear el mes? Se guardará automáticamente el resumen.')) {
+                const resumen = {
+                    fecha: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }),
+                    supervisores: supervisores.map(sup => ({
+                        nombre: sup,
+                        cumplimiento: calcularCumplimiento(sup),
+                        cumplioTodo: calcularCumplimiento(sup) === 100
+                    }))
+                };
+                historico.push(resumen);
+                entregas = {};
+                guardar();
+                render();
+            }
+        }
+
+        // Toggle admin panel
+        document.getElementById('toggleAdmin').addEventListener('click', () => {
+            document.getElementById('adminPanel').classList.toggle('hidden');
+        });
+
+        // Export Excel
+        document.getElementById('exportarBtn').addEventListener('click', exportarExcel);
+
+        // Exportar CSV
+        document.getElementById('exportarCSVBtn').addEventListener('click', exportarCSV);
+
+        // Importar
+        document.getElementById('importarBtn').addEventListener('click', importarDatos);
+
+        // Reset mes
+        document.getElementById('resetBtn').addEventListener('click', resetearMes);
+
+        // Render
+        function render() {
+            mostrarAlertas();
+            // Supervisores list
+            const supervisoresList = document.getElementById('supervisoresList');
+            supervisoresList.innerHTML = supervisores.map(sup => `
+                <div class="item">
+                    <span>${sup}</span>
+                    <button class="delete-btn" onclick="eliminarSupervisor('${sup}')">🗑️</button>
+                </div>
+            `).join('');
+
+            // Tareas list
+            const tareasList = document.getElementById('tareasList');
+            tareasList.innerHTML = tareas.map(tarea => `
+                <div class="item">
+                    <div class="item-info">
+                        <div class="item-name">${tarea.nombre}</div>
+                        <div class="item-vencimiento">${tarea.vencimiento}</div>
+                    </div>
+                    <button class="delete-btn" onclick="eliminarTarea(${tarea.id})">🗑️</button>
+                </div>
+            `).join('');
+
+            // Stats
+            const totalCompletos = supervisores.filter(s => calcularCumplimiento(s) === 100).length;
+            const promedio = supervisores.length > 0 
+                ? Math.round(supervisores.reduce((sum, s) => sum + calcularCumplimiento(s), 0) / supervisores.length)
+                : 0;
+            
+            document.getElementById('supervisoresCompletos').textContent = `${totalCompletos}/${supervisores.length}`;
+            document.getElementById('cumplimientoPromedio').textContent = `${promedio}%`;
+            document.getElementById('tareasActivas').textContent = tareas.length;
+
+            // Table headers
+            const tareaHeaders = tareas.map(t => `<th>${t.nombre}</th>`).join('');
+            const headerRow = document.querySelector('thead tr');
+            headerRow.innerHTML = `<th>Supervisor</th>${tareaHeaders}<th>Cumplimiento</th>`;
+
+            // Table body
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = supervisores.map(supervisor => {
+                const cumplimiento = calcularCumplimiento(supervisor);
+                const cellClass = cumplimiento === 100 ? 'cumplimiento-100' : cumplimiento >= 80 ? 'cumplimiento-80' : 'cumplimiento-low';
+                
+                return `
+                    <tr>
+                        <td class="supervisor-cell">${supervisor}</td>
+                        ${tareas.map(tarea => {
+                            const isCompleted = entregas[`${supervisor}-${tarea.id}`];
+                            return `
+                                <td class="data-cell ${isCompleted ? 'checked' : 'unchecked'}" onclick="toggleEntrega('${supervisor}', ${tarea.id})">
+                                    <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleEntrega('${supervisor}', ${tarea.id})">
+                                </td>
+                            `;
+                        }).join('')}
+                        <td class="cumplimiento-cell ${cellClass}">${cumplimiento}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Histórico
+            const historicoSection = document.getElementById('historicoSection');
+            if (historico.length > 0) {
+                historicoSection.classList.remove('hidden');
+                const historicoGrid = document.getElementById('historicoGrid');
+                historicoGrid.innerHTML = historico.map(mes => `
+                    <div class="historico-card">
+                        <div class="historico-header">${mes.fecha}</div>
+                        <div class="historico-list">
+                            ${mes.supervisores.map(sup => `
+                                <div class="historico-item">
+                                    <span>${sup.nombre}</span>
+                                    <span class="${sup.cumplioTodo ? 'cumplido' : 'no-cumplido'}">${sup.cumplimiento}%</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
