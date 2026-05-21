@@ -576,9 +576,37 @@
         <div class="actions-bar">
             <button class="action-btn" id="exportarBtn">📊 Exportar Excel</button>
             <button class="action-btn" id="exportarCSVBtn">📋 Exportar para Importar</button>
-            <button class="action-btn" id="importarBtn">📥 Importar Datos</button>
+            <button class="action-btn" id="copiarTextoBtn">📋 Copiar Datos en Texto</button>
+            <button class="action-btn" id="importarBtn">📥 Importar Archivo</button>
+            <button class="action-btn" onclick="document.getElementById('modalImportarTexto').classList.remove('hidden'); document.getElementById('modalImportarTexto').style.display='flex';">📥 Importar Texto</button>
             <input type="file" id="archivoImportar" accept=".csv,.xls,.xlsx" style="display: none;">
             <button class="action-btn reset" id="resetBtn">🔄 Resetear Mes</button>
+        </div>
+
+        <!-- MODAL COPIAR TEXTO -->
+        <div id="modalCopiarTexto" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000;">
+            <div style="background: #1a1a1a; border-radius: 8px; padding: 20px; max-width: 600px; width: 90%; border: 1px solid #444;">
+                <h3 style="color: #fff; margin-top: 0;">📋 Copiar Datos en Texto</h3>
+                <p style="color: #999; font-size: 13px;">Selecciona todo, copia y pega en el celular</p>
+                <textarea id="textoCopiar" style="width: 100%; height: 300px; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #e0e0e0; font-family: monospace; font-size: 12px;"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button onclick="document.getElementById('textoCopiar').select(); document.execCommand('copy'); alert('✅ Copiado al portapapeles');" style="flex: 1; padding: 10px; background: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">📋 Copiar al Portapapeles</button>
+                    <button onclick="document.getElementById('modalCopiarTexto').classList.add('hidden'); document.getElementById('modalCopiarTexto').style.display='none';" style="flex: 1; padding: 10px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL IMPORTAR DESDE TEXTO -->
+        <div id="modalImportarTexto" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000;">
+            <div style="background: #1a1a1a; border-radius: 8px; padding: 20px; max-width: 600px; width: 90%; border: 1px solid #444;">
+                <h3 style="color: #fff; margin-top: 0;">📥 Importar desde Texto</h3>
+                <p style="color: #999; font-size: 13px;">Pega el contenido que copiaste aquí</p>
+                <textarea id="textoImportar" placeholder="Pega el contenido aquí..." style="width: 100%; height: 300px; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: #e0e0e0; font-family: monospace; font-size: 12px;"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="btnImportarTexto" style="flex: 1; padding: 10px; background: #1e88e5; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✅ Importar Datos</button>
+                    <button onclick="document.getElementById('modalImportarTexto').classList.add('hidden'); document.getElementById('modalImportarTexto').style.display='none';" style="flex: 1; padding: 10px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Cancelar</button>
+                </div>
+            </div>
         </div>
 
         <!-- HISTÓRICO -->
@@ -785,16 +813,44 @@
                     }
 
                     // Parsear header
-                    const header = lineas[0].split(',').map(h => h.trim().toLowerCase());
-                    const supervisorIdx = header.findIndex(h => h.includes('supervisor'));
-                    const cumplimientoIdx = header.length - 1;
+                    const header = lineas[0].split(',').map(h => h.trim());
+                    const supervisorIdx = header.findIndex(h => h.toLowerCase().includes('supervisor'));
+                    const cumplimientoIdx = header.findIndex(h => h.toLowerCase().includes('cumplimiento'));
 
                     if (supervisorIdx === -1) {
                         alert('No se encontró columna "Supervisor"');
                         return;
                     }
 
-                    // Extraer supervisores y tareas
+                    // Detectar columnas de tareas (entre supervisor y cumplimiento)
+                    const tareasColumnas = [];
+                    for (let i = supervisorIdx + 1; i < header.length; i++) {
+                        if (i === cumplimientoIdx) continue;
+                        const nombreTarea = header[i].trim();
+                        if (nombreTarea) {
+                            tareasColumnas.push({
+                                nombre: nombreTarea,
+                                indice: i
+                            });
+                        }
+                    }
+
+                    // Agregar tareas nuevas que no existen
+                    tareasColumnas.forEach(col => {
+                        const tareaExiste = tareas.find(t => 
+                            t.nombre.toLowerCase() === col.nombre.toLowerCase()
+                        );
+                        if (!tareaExiste) {
+                            const newId = Math.max(...tareas.map(t => t.id), 0) + 1;
+                            tareas.push({ 
+                                id: newId, 
+                                nombre: col.nombre, 
+                                vencimiento: 'Variable' 
+                            });
+                        }
+                    });
+
+                    // Extraer supervisores
                     const nuevosSupervisores = new Set();
                     const nuevasEntregas = {};
 
@@ -805,26 +861,27 @@
                         const supervisor = valores[supervisorIdx];
                         nuevosSupervisores.add(supervisor);
 
-                        // Parsear entregas (columnas entre supervisor y cumplimiento)
-                        for (let j = supervisorIdx + 1; j < cumplimientoIdx; j++) {
-                            const valor = valores[j];
+                        // Parsear entregas
+                        tareasColumnas.forEach(col => {
+                            const valor = valores[col.indice];
                             if (valor === 'Sí' || valor === '✓' || valor === 'true') {
-                                // Encontrar la tarea correspondiente
-                                const tareaHeader = header[j];
+                                // Encontrar la tarea en la lista actualizada
                                 const tareaEncontrada = tareas.find(t => 
-                                    t.nombre.toLowerCase().includes(tareaHeader) || 
-                                    tareaHeader.includes(t.nombre.toLowerCase())
+                                    t.nombre.toLowerCase() === col.nombre.toLowerCase()
                                 );
                                 
                                 if (tareaEncontrada) {
                                     nuevasEntregas[`${supervisor}-${tareaEncontrada.id}`] = true;
                                 }
                             }
-                        }
+                        });
                     }
 
                     const numSupervisores = nuevosSupervisores.size;
                     const numEntregas = Object.keys(nuevasEntregas).length;
+                    const numTareasNuevas = tareasColumnas.length - tareas.length + tareasColumnas.filter(col =>
+                        tareas.find(t => t.nombre.toLowerCase() === col.nombre.toLowerCase())
+                    ).length;
 
                     if (numSupervisores === 0) {
                         alert('No se encontraron supervisores en el archivo');
@@ -832,12 +889,12 @@
                     }
 
                     // Confirmar importación
-                    if (confirm(`¿Importar ${numSupervisores} supervisor(es) y ${numEntregas} entrega(s)?\n\nSuperviso res: ${Array.from(nuevosSupervisores).join(', ')}`)) {
+                    if (confirm(`¿Importar:\n${numSupervisores} supervisor(es)\n${numEntregas} entrega(s)\n${tareasColumnas.length} tareas\n\nSuperviso res: ${Array.from(nuevosSupervisores).join(', ')}`)) {
                         supervisores = Array.from(nuevosSupervisores);
                         entregas = nuevasEntregas;
                         guardar();
                         render();
-                        alert('✅ Datos importados correctamente');
+                        alert('✅ Datos importados correctamente\n✅ Tareas nuevas agregadas automáticamente');
                         document.getElementById('archivoImportar').value = '';
                     }
                 } catch (error) {
@@ -958,7 +1015,125 @@ td { background-color: #f9f9f9; }
         // Exportar CSV
         document.getElementById('exportarCSVBtn').addEventListener('click', exportarCSV);
 
-        // Importar
+        // Copiar datos en texto
+        document.getElementById('copiarTextoBtn').addEventListener('click', () => {
+            const datos = [];
+            const header = ['Supervisor', ...tareas.map(t => t.nombre), 'Cumplimiento %'];
+            datos.push(header);
+            
+            supervisores.forEach(sup => {
+                const fila = [sup];
+                tareas.forEach(t => {
+                    fila.push(entregas[`${sup}-${t.id}`] ? 'Sí' : '');
+                });
+                fila.push(calcularCumplimiento(sup));
+                datos.push(fila);
+            });
+            
+            let csv = '';
+            datos.forEach(fila => {
+                csv += fila.map(cell => {
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return '"' + cellStr.replace(/"/g, '""') + '"';
+                    }
+                    return cellStr;
+                }).join(',') + '\n';
+            });
+
+            document.getElementById('textoCopiar').value = csv;
+            document.getElementById('modalCopiarTexto').classList.remove('hidden');
+            document.getElementById('modalCopiarTexto').style.display = 'flex';
+        });
+
+        // Importar desde texto
+        document.getElementById('btnImportarTexto').addEventListener('click', () => {
+            const contenido = document.getElementById('textoImportar').value.trim();
+            if (!contenido) {
+                alert('Por favor pega el contenido primero');
+                return;
+            }
+
+            try {
+                const lineas = contenido.split('\n').filter(l => l.trim());
+                if (lineas.length < 2) {
+                    alert('Contenido inválido');
+                    return;
+                }
+
+                const header = lineas[0].split(',').map(h => h.trim());
+                const supervisorIdx = header.findIndex(h => h.toLowerCase().includes('supervisor'));
+                const cumplimientoIdx = header.findIndex(h => h.toLowerCase().includes('cumplimiento'));
+
+                if (supervisorIdx === -1) {
+                    alert('No se encontró columna "Supervisor"');
+                    return;
+                }
+
+                const tareasColumnas = [];
+                for (let i = supervisorIdx + 1; i < header.length; i++) {
+                    if (i === cumplimientoIdx) continue;
+                    const nombreTarea = header[i].trim();
+                    if (nombreTarea) {
+                        tareasColumnas.push({ nombre: nombreTarea, indice: i });
+                    }
+                }
+
+                tareasColumnas.forEach(col => {
+                    const tareaExiste = tareas.find(t => t.nombre.toLowerCase() === col.nombre.toLowerCase());
+                    if (!tareaExiste) {
+                        const newId = Math.max(...tareas.map(t => t.id), 0) + 1;
+                        tareas.push({ id: newId, nombre: col.nombre, vencimiento: 'Variable' });
+                    }
+                });
+
+                const nuevosSupervisores = new Set();
+                const nuevasEntregas = {};
+
+                for (let i = 1; i < lineas.length; i++) {
+                    const valores = lineas[i].split(',').map(v => v.trim());
+                    if (!valores[supervisorIdx]) continue;
+
+                    const supervisor = valores[supervisorIdx];
+                    nuevosSupervisores.add(supervisor);
+
+                    tareasColumnas.forEach(col => {
+                        const valor = valores[col.indice];
+                        if (valor === 'Sí' || valor === '✓' || valor === 'true') {
+                            const tareaEncontrada = tareas.find(t => t.nombre.toLowerCase() === col.nombre.toLowerCase());
+                            if (tareaEncontrada) {
+                                nuevasEntregas[`${supervisor}-${tareaEncontrada.id}`] = true;
+                            }
+                        }
+                    });
+                }
+
+                if (nuevosSupervisores.size === 0) {
+                    alert('No se encontraron supervisores');
+                    return;
+                }
+
+                if (confirm(`¿Importar ${nuevosSupervisores.size} supervisor(es)?`)) {
+                    supervisores = Array.from(nuevosSupervisores);
+                    entregas = nuevasEntregas;
+                    guardar();
+                    render();
+                    alert('✅ Datos importados correctamente');
+                    document.getElementById('modalImportarTexto').classList.add('hidden');
+                    document.getElementById('modalImportarTexto').style.display = 'none';
+                    document.getElementById('textoImportar').value = '';
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        });
+
+        // Abrir modal de importar texto
+        const btnImportarTextoModal = document.createElement('button');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Los botones ya abren los modales inline en el HTML
+        });
+
         document.getElementById('importarBtn').addEventListener('click', importarDatos);
 
         // Reset mes
