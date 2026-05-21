@@ -725,6 +725,26 @@
             }
         }
 
+        // Editar tarea
+        function editarTarea(tareaId) {
+            const tarea = tareas.find(t => t.id === tareaId);
+            if (!tarea) return;
+
+            const nuevoNombre = prompt('Nombre de la tarea:', tarea.nombre);
+            if (nuevoNombre === null) return;
+            
+            const nuevoVencimiento = prompt('Vencimiento (ej: Lunes, Día 15):', tarea.vencimiento);
+            if (nuevoVencimiento === null) return;
+
+            if (nuevoNombre.trim() && nuevoVencimiento.trim()) {
+                tarea.nombre = nuevoNombre.trim();
+                tarea.vencimiento = nuevoVencimiento.trim();
+                guardar();
+                render();
+                alert('✅ Tarea actualizada');
+            }
+        }
+
         // Calcular cumplimiento
         function calcularCumplimiento(supervisor) {
             if (tareas.length === 0) return 0;
@@ -957,7 +977,10 @@ td { background-color: #f9f9f9; }
                         <div class="item-name">${tarea.nombre}</div>
                         <div class="item-vencimiento">${tarea.vencimiento}</div>
                     </div>
-                    <button class="delete-btn" onclick="eliminarTarea(${tarea.id})">🗑️</button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="delete-btn" onclick="editarTarea(${tarea.id})" style="background-color: #1e88e5;">✏️</button>
+                        <button class="delete-btn" onclick="eliminarTarea(${tarea.id})">🗑️</button>
+                    </div>
                 </div>
             `).join('');
 
